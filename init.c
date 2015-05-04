@@ -16,6 +16,8 @@ int main (void) {
   double h;                                       // stepwidth              //
   unsigned int i, j;                              // loop-indices           //
 
+
+  //---------------------------- allocations -------------------------------//
   u = (double *) malloc((n+2)*(n+2)*sizeof(double));
   v = (double *) malloc((n+2)*(n+2)*sizeof(double));
 

@@ -6,26 +6,28 @@
 struct Grid {
   double *u;                                      // solution pointer       //
   double *v;                                      // right hand side point. //
+  unsigned int  n;                                // number of grid points  //
   double  h;                                      // stepwidth              //
 };
 //--------------------------------------------------------------------------//
 
 //--------------------------- getters, setters -----------------------------//
-double  Grid_Get_h (Grid G) {return G->h;}        // get stepwidth          //
 void *  Grid_Get_u (Grid G) {return G->u;}        // get solution           //
 void *  Grid_Get_v (Grid G) {return G->v;}        // get right-hand-side    //
+unsigned int Grid_Get_n (Grid G) {return G->n;}   // get number grid points //
+double  Grid_Get_h (Grid G) {return G->h;}        // get stepwidth          //
 
-void    Grid_Set   (Grid G, double * u, double * v, unsigned int N) {
+void    Grid_Set   (Grid G, double * u, double * v, unsigned int n) {
   G->u = u;                                       // set solution           //
   G->v = v;                                       // set right-hand-side    //
-  G->h = 1./(N+1.);                               // set stepwidth          //
+  G->n = n;                                       // set number grid points //
+  G->h = 1./(n+1.);                               // set stepwidth          //
 }
 void    Grid_Set_u (Grid G, double * u) {G->u = u;}
-void    Grid_Set_v (Grid G, double * v) {G->v = v;}
 
 //--------------------------------------------------------------------------//
 
-//-------------------------- memory allocation -----------------------------//
+//------------------------ memory (de-)allocation --------------------------//
 Grid Grid_Create (void) {
   return calloc(1,sizeof(struct Grid));
 }
