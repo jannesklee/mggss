@@ -3,7 +3,7 @@
 #define Header_Routines
 
 //----------------------------- functions ----------------------------------//
-void Gauss_Seidel(Grid);
+void Gauss_Seidel(Grid, double *);
 
 void Restriction(Grid);
 

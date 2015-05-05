@@ -11,4 +11,13 @@ General Usage Notes
 TODO: Write here something if necessary
 
 Installation
-TODO: Write here compiling command
+Compile the files by typing in:
+
+    make
+
+The gcc compiler is used. Change the second line of the Makefile "CC gcc" to
+use another one. For clean up use:
+
+    make clean
+
+<---------------------------------------------------------------------------->
