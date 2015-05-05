@@ -1,6 +1,6 @@
 TARGET = fdgss.out
 CC = gcc
-CFLAGS = -std=c99 -pedantic -Wall -Wextra -Wdeclaration-after-statement -O2
+CFLAGS = -std=c99 -pedantic -Wall -Wextra -Wdeclaration-after-statement -O2 -lm
 DEBUG = -g
 SRCDIR = src
 OBJDIR = obj
