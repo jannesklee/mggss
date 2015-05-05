@@ -5,6 +5,7 @@
 #include <stdio.h>                                // standard input-output  //
 #include <stdlib.h>                               //                        //
 #include "grid.h"                                 // linear systems struct  //
+#include "routines.h"                             // gauss_seidel routine   //
 
 
 int main (void) {
@@ -12,8 +13,8 @@ int main (void) {
   Grid G;                                         // system of linear eqs.  //
   double * u, * v;                                // solution u and rhs v   //
   unsigned int n = 9;                             // mesh resolution        //
-  double eps = 1e-3;                              // error                  //
-  double h;                                       // stepwidth              //
+//  double eps = 1e-3;                              // error                  //
+//  double h;                                       // stepwidth              //
   unsigned int i, j;                              // loop-indices           //
 
 
@@ -41,19 +42,26 @@ int main (void) {
   Grid_Set(G, u, v, n);
   //------------------------------------------------------------------------//
 
-  v = Grid_Get_u(G);
-
   for (i = 0; i < n+2; i++) {
     for (j = 0; j < n+2; j++) {
-      printf("%f\n", v[i+j*(n+2)]);
+      printf("%f, %f\n",u[i+j*(n+2)], v[i+j*(n+2)]);
     }
     printf("\n");
   }
 
 //  while (norm(u) < eps) {
-//    Gauss_Seidel(G);
-//    u = Grid_Get_u(G);
+    Gauss_Seidel(G);                              // updates u              //
+//    u = Grid_Get_u(G);                            //                        //
 //  }
+
+  printf("\n");
+
+  for (i = 0; i < n+2; i++) {
+    for (j = 0; j < n+2; j++) {
+      printf("%f, %f\n",u[i+j*(n+2)], v[i+j*(n+2)]);
+    }
+    printf("\n");
+  }
 
 
   Grid_Destroy(&G);

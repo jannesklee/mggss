@@ -24,6 +24,10 @@ void    Grid_Set   (Grid G, double * u, double * v, unsigned int n) {
   G->h = 1./(n+1.);                               // set stepwidth          //
 }
 void    Grid_Set_u (Grid G, double * u) {G->u = u;}
+void    Grid_Set_n (Grid G, unsigned int n) {
+  G->n = n/2;                                     // set n and implicitely  //
+  G->h = 1./(n+1.);                               // also h                 //
+}
 
 //--------------------------------------------------------------------------//
 
