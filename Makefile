@@ -1,4 +1,4 @@
-TARGET = fdgss.out
+TARGET = mggss.out
 CC = gcc
 CFLAGS = -std=c99 -pedantic -Wall -Wextra -Wdeclaration-after-statement -O2 -lm
 DEBUG = -g
