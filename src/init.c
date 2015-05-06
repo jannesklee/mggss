@@ -2,13 +2,12 @@
  *                                                                           *
  ****************************************************************************/
 
-#include <stdio.h>                                // printf, ...            //
 #include <stdlib.h>                               // allocate, ...          //
 #include <math.h>                                 // math library           //
 #include "grid.h"                                 // linear systems struct  //
 #include "routines.h"                             // gauss_seidel routine   //
 
-void output(Grid);
+void Output(Grid);
 
 
 int main (void) {
@@ -51,44 +50,27 @@ int main (void) {
   Grid_Set(G, u, v, n);
 
 
-  output(G);
+  Output(G);
 
   eps = 0.0;
   Gauss_Seidel(G, &eps);
 
-  output(G);
+  Output(G);
 
   Restriction(G);
 
-  output(G);
+  Output(G);
 
   eps = 0.0;
   Gauss_Seidel(G, &eps);
 
-  output(G);
+  Output(G);
 
-//  Prolongation;
+  Prolongation(G);
+
+  Output(G);
 
 
   Grid_Destroy(&G);
   return 0;
-}
-
-void output(Grid G){
-  double *u, *v;
-  unsigned int i,j,n;
-
-  u = Grid_Get_u(G);
-  v = Grid_Get_v(G);
-  n = Grid_Get_n(G);
-
-  //------------------------------- output ---------------------------------//
-  for (i = 0; i < n+2; i++) {
-    for (j = 0; j < n+2; j++) {
-      printf("%f, %f, %f, %f\n", 1./(n+1.)*i, 1./(n+1.)*j, u[i+j*(n+2)], v[i+j*(n+2)]);
-    }
-    printf("\n");
-  }
-  printf("\n");
-  //------------------------------------------------------------------------//
 }

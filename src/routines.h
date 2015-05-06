@@ -10,5 +10,7 @@ void Restriction(Grid);
 void Prolongation(Grid);
 
 double * AddEval(double, Grid);
+
+void Output(Grid);
 //--------------------------------------------------------------------------//
 #endif
