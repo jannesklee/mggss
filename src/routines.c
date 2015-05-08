@@ -7,64 +7,84 @@
 
 //------------------------- multigrid-method -------------------------------//
 void MG_Method(Grid G, double *eps) {
-  double *u, *u_tmp;
+  double *u, *u_save, *v, *v_save;
   unsigned int n;
   unsigned int i, j;
 
   n = Grid_Get_n(G);
   u = Grid_Get_u(G);
 
-  u_tmp = (double *) malloc((n+2)*(n+2)*sizeof(double));
+  u_save = (double *) malloc((n+2)*(n+2)*sizeof(double));
+  v_save = (double *) malloc((n+2)*(n+2)*sizeof(double));
 
+  //----------------------------- finer grid -------------------------------//
   // pre-smoothing
-  Gauss_Seidel(G, eps); // gauss-seidel with residual
+  Gauss_Seidel(G);
 
-
-  // save u in u_tmp
+  // save u and v in temporary variables
   u = Grid_Get_u(G);
+  v = Grid_Get_v(G);
   for (j = 0; j < n+2; j++) {
     for (i = 0; i < n+2; i++) {
-      u_tmp[i+j*(n+2)] = u[i+j*(n+2)];
+      u_save[i+j*(n+2)] = u[i+j*(n+2)];
+      v_save[i+j*(n+2)] = v[i+j*(n+2)];
     }
   }
-
   // calculate residual r and write it in v
   AddEval(1.0, G);
+  //------------------------------------------------------------------------//
 
+  //--------------------------- coarser grid -------------------------------//
+  // restricts only v, because it is assumed to use the residue!
   Restriction(G);
 
   // set u (now the error) to zero
   n = Grid_Get_n(G);
   u = Grid_Get_u(G);
-  memset(u, 0, n*sizeof(u[0]));
+  memset(u, 0, (n+2)*(n+2)*sizeof(u[0]));
   Grid_Set_u(G, u);
 
-  // recalculate on coarser grid (TODO: here eventuelly exact solver?)
-  Gauss_Seidel(G, eps);
+  // recalculate on coarser grid (TODO: here eventuelly not an iterative scheme?)
+  Gauss_Seidel(G);
+  //------------------------------------------------------------------------//
 
+  //--------------------------- finer grid ---------------------------------//
   // prolongate array
   Prolongation(G);
 
   // finally calculate solution
   u = Grid_Get_u(G);
+  n = Grid_Get_n(G);
+  v = Grid_Get_v(G);
   for (j = 0; j < n+2; j++) {
     for (i = 0; i < n+2; i++) {
-      u_tmp[i+j*(n+2)] = u_tmp[i+j*(n+2)] + u[i+j*(n+2)];
+      u[i+j*(n+2)] = u_save[i+j*(n+2)] + u[i+j*(n+2)];
+      v[i+j*(n+2)] = v_save[i+j*(n+2)];
     }
   }
 
-  Grid_Set_u(G,u_tmp);
-
   // post-smoothing
-  Gauss_Seidel(G, eps);
+  Grid_Set_v(G, v);
+  Grid_Set_u(G, u);
+  Gauss_Seidel(G);
+
+  // calculate error and set back to zero before doing so
+  *eps = 0.0;
+  for (j = 1; j < n+1; j++) {
+    for (i = 1; i < n+1; i++) {
+      (*eps) = fmax((*eps),fabs(u[i+j*(n+2)]-u_save[i+j*(n+2)]));
+    }
+  }
+
+  free(u_save);
+  free(v_save);
 }
 
 //---------------------------- gauss-seidel --------------------------------//
-void Gauss_Seidel (Grid G, double *eps) {
+void Gauss_Seidel (Grid G) {
   double *u, *v;                                  // solution, rhs          //
   double h;                                       // stepwidth              //
   unsigned int n;                                 // number of grid points  //
-  double tmp;
   unsigned int i, j;
 
   u = Grid_Get_u(G);
@@ -73,13 +93,10 @@ void Gauss_Seidel (Grid G, double *eps) {
   n = Grid_Get_n(G);
 
   // main-part of gauss-seidel
-  *eps = 0.0;
   for (i = 1; i < n+1; i++) {
     for (j = 1; j < n+1; j++) {
-      tmp = u[i+j*(n+2)];
-      u[i+j*(n+2)] = h*h/4.*(v[i+j*(n+2)] + u[(i+1)+j*(n+2)]
+      u[i+j*(n+2)] = 0.25*(h*h*v[i+j*(n+2)] + u[(i+1)+j*(n+2)]
           + u[(i-1)+j*(n+2)] + u[i+(j+1)*(n+2)] + u[i+(j-1)*(n+2)]);
-      (*eps) = fmax((*eps),fabs(u[i+j*(n+2)]-tmp));
     }
   }
 
@@ -88,79 +105,94 @@ void Gauss_Seidel (Grid G, double *eps) {
 
 //---------------------------- restriction ---------------------------------//
 void Restriction (Grid G) {
-  double *r, *r_c;                                // actual & coarser grid  //
-  double *u_c;                                    // coarser grid           //
+  double *u, *u_c;                                // values at              //
+  double *v, *v_c;                                // current & coarser grid //
   unsigned int n, n_c;                            // number of grid-points  //
   unsigned int i, j;
 
-  // get grid sizes of actual and calculate coarser grid
+  // get and allocate values on current and coarser grid
   n = Grid_Get_n(G);
+  u = Grid_Get_u(G);
+  v = Grid_Get_v(G);
   n_c = n/2;
-
-  // get the residual (equals v)
-  r = Grid_Get_v(G);
-
-  // allocate residual for coarser grid
   u_c = (double *) malloc((n_c+2)*(n_c+2)*sizeof(double));
-  r_c = (double *) malloc((n_c+2)*(n_c+2)*sizeof(double));
+  v_c = (double *) malloc((n_c+2)*(n_c+2)*sizeof(double));
 
-  // loop over even, even combinations in order to define coarse grid
+  // loop over even, even combination in order to define coarse grid
   for (j = 2; j < n+1; j = j+2) {
     for (i = 2; i < n+1; i = i+2) {
-      r_c[i/2+j/2*(n_c+2)] = 0.25*(r[i+j*(n+2)] + 0.5*(r[(i+1)+j*(n+2)] +
-          r[(i-1)+j*(n+2)] + r[i+(j+1)*(n+2)] + r[i+(j-1)*(n+2)]) +
-          0.25*(r[(i+1)+(j+1)*(n+2)] + r[(i-1)+(j+1)*(n+2)] +
-          r[(i+1)+(j-1)*(n+2)] + r[(i-1)+(j-1)*(n+2)]));
+      v_c[i/2+j/2*(n_c+2)] = 0.25*(v[i+j*(n+2)] + 0.5*(v[(i+1)+j*(n+2)] +
+          v[(i-1)+j*(n+2)] + v[i+(j+1)*(n+2)] + v[i+(j-1)*(n+2)]) +
+          0.25*(v[(i+1)+(j+1)*(n+2)] + v[(i-1)+(j+1)*(n+2)] +
+          v[(i+1)+(j-1)*(n+2)] + v[(i-1)+(j-1)*(n+2)]));
+    }
+  }
+
+  // copy values in first half of v array
+  for (j = 1; j < n_c+1; j++) {
+    for (i = 1; i < n_c+1; i++) {
+      v[i+j*(n_c+2)] = v_c[i+j*(n_c+2)];
     }
   }
 
   // overwrite grid
-  Grid_Set(G, u_c, r_c, n_c);
+  Grid_Set(G, u, v, n_c);
+  free(u_c);
+  free(v_c);
 }
 
 //--------------------------- prolongation ---------------------------------//
 void Prolongation(Grid G) {
-  double *r, *r_f;                                // residues both grids    //
-  double *tmp_f, *u_f;                            // finer grid             //
-  unsigned int n, n_f;                            // number of points       //
+  double *v, *v_f;                                // values at              //
+  double *u, *u_f;                                // current & finer grid   //
+  unsigned int n, n_f;                            // number of grid points  //
   unsigned int i, j;
 
-  // actual (coarser) grid
-  r = Grid_Get_v(G);
+  // get and allocate values on current and finer grid
   n = Grid_Get_n(G);
-
-  // finer grid
+  u = Grid_Get_u(G);
+  v = Grid_Get_v(G);
   n_f = n*2;
-  r_f = (double *) malloc((n_f+2)*(n_f+2)*sizeof(double));
-  tmp_f = (double *) malloc((n_f+2)*(n_f+2)*sizeof(double));
   u_f = (double *) malloc((n_f+2)*(n_f+2)*sizeof(double));
+  v_f = (double *) malloc((n_f+2)*(n_f+2)*sizeof(double));
 
-  // pad fine array with zeros at non-defined places
-  for (j = 1; j < n_f+1; j++) {
-    for (i = 1; i < n_f+1; i++) {
+  // pad fine temporary array with zeros at non-defined places
+  for (j = 0; j < n_f+2; j++) {
+    for (i = 0; i < n_f+2; i++) {
       if ((j%2 == 0) && (i%2 == 0)) {
-        tmp_f[i+j*(n_f+2)] = r[i/2+j/2*(n+2)];
+        v_f[i+j*(n_f+2)] = v[i/2+j/2*(n+2)];
+        u_f[i+j*(n_f+2)] = u[i/2+j/2*(n+2)];
       }else {
-        tmp_f[i+j*(n_f+2)] = 0;
+        v_f[i+j*(n_f+2)] = 0.0;
+        u_f[i+j*(n_f+2)] = 0.0;
       }
     }
   }
 
-  Grid_Set(G,u_f,tmp_f,n_f);
+
 
   // loop over all elements in finer array
   for (j = 1; j < n_f+1; j++) {
     for (i = 1; i < n_f+1; i++) {
-      r_f[i+j*(n_f+2)] = tmp_f[i+j*(n_f+2)] + 0.5*(tmp_f[(i+1)+j*(n_f+2)]
-          + tmp_f[(i-1)+j*(n_f+2)] + tmp_f[i+(j+1)*(n_f+2)]
-          + tmp_f[i+(j-1)*(n_f+2)]) + 0.25*(tmp_f[(i+1)+(j+1)*(n_f+2)]
-          + tmp_f[(i+1)+(j-1)*(n_f+2)] + tmp_f[(i-1)+(j+1)*(n_f+2)]
-          + tmp_f[(i-1)+(j-1)*(n_f+2)]);
+      v[i+j*(n_f+2)] = v_f[i+j*(n_f+2)] + 0.5*(v_f[(i+1)+j*(n_f+2)]
+          + v_f[(i-1)+j*(n_f+2)] + v_f[i+(j+1)*(n_f+2)]
+          + v_f[i+(j-1)*(n_f+2)]) + 0.25*(v_f[(i+1)+(j+1)*(n_f+2)]
+          + v_f[(i+1)+(j-1)*(n_f+2)] + v_f[(i-1)+(j+1)*(n_f+2)]
+          + v_f[(i-1)+(j-1)*(n_f+2)]);
+      u[i+j*(n_f+2)] = u_f[i+j*(n_f+2)] + 0.5*(u_f[(i+1)+j*(n_f+2)]
+          + u_f[(i-1)+j*(n_f+2)] + u_f[i+(j+1)*(n_f+2)]
+          + u_f[i+(j-1)*(n_f+2)]) + 0.25*(u_f[(i+1)+(j+1)*(n_f+2)]
+          + u_f[(i+1)+(j-1)*(n_f+2)] + u_f[(i-1)+(j+1)*(n_f+2)]
+          + u_f[(i-1)+(j-1)*(n_f+2)]);
     }
   }
 
   // overwrite grid
-  Grid_Set(G,u_f,r_f,n_f);
+  Grid_Set(G,u,v,n_f);
+
+  // deallocation
+  free(v_f);
+  free(u_f);
 }
 
 //----------------------------- addeval ------------------------------------//
@@ -179,7 +211,7 @@ void AddEval(double alpha, Grid G) {
 
   for (j = 1; j < n+1; j++){
     for (i = 1; i < n+1; i++){
-      v[i+j*(n+2)] = v[i+j*(n+2)] + alpha*(4.*u[i+j*(n+2)] -
+      v[i+j*(n+2)] = v[i+j*(n+2)] - alpha*(4.*u[i+j*(n+2)] -
                        u[(i+1)+j*(n+2)] - u[(i-1)+j*(n+2)] -
                        u[i+(j+1)*(n+2)] - u[i+(j-1)*(n+2)]);
     }
@@ -199,7 +231,7 @@ void Output(Grid G){
 
   for (i = 1; i < n+1; i++) {
     for (j = 1; j < n+1; j++) {
-      printf("%.18f, %.18f, %.18f, %.18f\n", 
+      printf("%.18f, %.18f, %.18f, %.18f\n",
           1./(n-1)*(i-1.), 1./(n-1)*(j-1.), u[i+j*(n+2)], v[i+j*(n+2)]);
     }
     printf("\n");

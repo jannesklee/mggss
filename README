@@ -7,10 +7,10 @@
     Email   : jklee@astrophysik.uni-kiel.de
 <---------------------------------------------------------------------------->
 
-General Usage Notes
+##General Usage Notes
 TODO: Write here something if necessary
 
-Installation
+##Installation
 Compile the files by typing in:
 
     make

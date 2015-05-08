@@ -4,7 +4,7 @@
 
 //----------------------------- functions ----------------------------------//
 void MG_Method(Grid, double *);
-void Gauss_Seidel(Grid, double *);
+void Gauss_Seidel(Grid);
 
 void Restriction(Grid);
 
