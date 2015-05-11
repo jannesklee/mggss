@@ -119,7 +119,7 @@ void Restriction (Grid G) {
   n = Grid_Get_n(G);
   u = Grid_Get_u(G);
   v = Grid_Get_v(G);
-  n_c = n/2;
+  n_c = (n-1)/2;
   u_c = (double *) calloc((n_c+2)*(n_c+2), sizeof(double));
   v_c = (double *) calloc((n_c+2)*(n_c+2), sizeof(double));
 
@@ -133,7 +133,7 @@ void Restriction (Grid G) {
     }
   }
 
-  // copy values in first half of v array
+  // copy values in first square of v array
   for (j = 1; j < n_c+1; j++) {
     for (i = 1; i < n_c+1; i++) {
       v[i+j*(n_c+2)] = v_c[i+j*(n_c+2)];
@@ -157,7 +157,7 @@ void Prolongation(Grid G) {
   n = Grid_Get_n(G);
   u = Grid_Get_u(G);
   v = Grid_Get_v(G);
-  n_f = n*2;
+  n_f = n*2+1;
   u_f = (double *) calloc((n_f+2)*(n_f+2), sizeof(double));
   v_f = (double *) calloc((n_f+2)*(n_f+2), sizeof(double));
 
@@ -165,10 +165,8 @@ void Prolongation(Grid G) {
   for (j = 1; j < n_f+1; j++) {
     for (i = 1; i < n_f+1; i++) {
       if ((j%2 == 0) && (i%2 == 0)) {
-        v_f[i+j*(n_f+2)] = v[i/2+j/2*(n+2)];
         u_f[i+j*(n_f+2)] = u[i/2+j/2*(n+2)];
       }else {
-        v_f[i+j*(n_f+2)] = 0.0;
         u_f[i+j*(n_f+2)] = 0.0;
       }
     }

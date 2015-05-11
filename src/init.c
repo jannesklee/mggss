@@ -13,8 +13,8 @@ int main (void) {
   //--------------------------- declarations -------------------------------//
   Grid          G;                                // grid                   //
   double        *u, *v;                           // solution u and rhs v   //
-  unsigned int  n = 1000;                         // mesh resolution        //
-  double        eps0 = 1e-11;                     // error-limit            //
+  unsigned int  n = 99;                           // res. has to be odd     //
+  double        eps0 = 1e-5;                      // error-limit            //
   double        eps  = 0.0;                       // error                  //
   unsigned int  i, j;
   double        r;                                // radius for init.       //
@@ -24,12 +24,12 @@ int main (void) {
   v = (double *) calloc((n+2)*(n+2), sizeof(double));
 
   //--------------------------- initialization -----------------------------//
-  // initial values
+  // initial values & boundaries
   for (i = 0; i < n+2; i++) {
     for (j = 0; j < n+2; j++) {
       r = sqrt((1./((n-1.)*(n-1.))*((i-n/2)*(i-n/2)+(j-n/2)*(j-n/2))));
       if (r < 0.1) {
-        v[i+j*(n+2)] = 1000.;
+        v[i+j*(n+2)] = 100.;
       } else {
         v[i+j*(n+2)] = 0.0;
       }
