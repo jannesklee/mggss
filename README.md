@@ -10,7 +10,7 @@ It uses Dirichlet boundary conditions.
 ###General Usage Notes
 Setup can be done in __init.c__ .
 
-##Installation
+###Installation
 Compilation is done by typing:
 
 ```sh
