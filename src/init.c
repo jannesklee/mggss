@@ -13,11 +13,11 @@ int main (void) {
   //--------------------------- declarations -------------------------------//
   Grid          G;                                // grid                   //
   double        *u, *v;                           // solution u and rhs v   //
-  unsigned int  n = 100;                          // mesh resolution        //
-  double        eps0 = 1e-11;                     // error                  //
+  unsigned int  n = 1000;                         // mesh resolution        //
+  double        eps0 = 1e-11;                     // error-limit            //
   double        eps  = 0.0;                       // error                  //
-  unsigned int  i, j;                             // loop-indices           //
-  double        r;                                // radiuas for init.      //
+  unsigned int  i, j;
+  double        r;                                // radius for init.       //
 
   //---------------------------- allocations -------------------------------//
   u = (double *) calloc((n+2)*(n+2), sizeof(double));
@@ -38,7 +38,7 @@ int main (void) {
   }
 
   // create grid with initial values for poisson equation
-  G = Grid_Create();                              // fine grid              //
+  G = Grid_Create();
   Grid_Set(G, u, v, n);
 
   //----------------------------- main loop --------------------------------//
