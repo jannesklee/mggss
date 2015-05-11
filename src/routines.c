@@ -175,7 +175,6 @@ void Prolongation(Grid G) {
   // set everything to zero to avoid side-effects
   for (j = 0; j < n+2; j++) {
     for (i = 0; i < n+2; i++) {
-      v[i+j*(n+2)] = 0.0;
       u[i+j*(n+2)] = 0.0;
     }
   }
@@ -185,11 +184,6 @@ void Prolongation(Grid G) {
   // loop over all elements in finer array
   for (j = 1; j < n_f+1; j++) {
     for (i = 1; i < n_f+1; i++) {
-      v[i+j*(n_f+2)] = v_f[i+j*(n_f+2)] + 0.5*(v_f[(i+1)+j*(n_f+2)]
-          + v_f[(i-1)+j*(n_f+2)] + v_f[i+(j+1)*(n_f+2)]
-          + v_f[i+(j-1)*(n_f+2)]) + 0.25*(v_f[(i+1)+(j+1)*(n_f+2)]
-          + v_f[(i+1)+(j-1)*(n_f+2)] + v_f[(i-1)+(j+1)*(n_f+2)]
-          + v_f[(i-1)+(j-1)*(n_f+2)]);
       u[i+j*(n_f+2)] = u_f[i+j*(n_f+2)] + 0.5*(u_f[(i+1)+j*(n_f+2)]
           + u_f[(i-1)+j*(n_f+2)] + u_f[i+(j+1)*(n_f+2)]
           + u_f[i+(j-1)*(n_f+2)]) + 0.25*(u_f[(i+1)+(j+1)*(n_f+2)]
@@ -197,7 +191,6 @@ void Prolongation(Grid G) {
           + u_f[(i-1)+(j-1)*(n_f+2)]);
     }
   }
-
   // overwrite grid
   Grid_Set(G,u,v,n_f);
 
