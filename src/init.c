@@ -13,15 +13,15 @@ int main (void) {
   //--------------------------- declarations -------------------------------//
   Grid          G;                                // grid                   //
   double        *u, *v;                           // solution u and rhs v   //
-  unsigned int  n = 200;                          // mesh resolution        //
+  unsigned int  n = 100;                          // mesh resolution        //
   double        eps0 = 1e-11;                     // error                  //
   double        eps  = 0.0;                       // error                  //
   unsigned int  i, j;                             // loop-indices           //
   double        r;                                // radiuas for init.      //
 
   //---------------------------- allocations -------------------------------//
-  u = (double *) malloc((n+2)*(n+2)*sizeof(double));
-  v = (double *) malloc((n+2)*(n+2)*sizeof(double));
+  u = (double *) calloc((n+2)*(n+2), sizeof(double));
+  v = (double *) calloc((n+2)*(n+2), sizeof(double));
 
   //--------------------------- initialization -----------------------------//
   // initial values

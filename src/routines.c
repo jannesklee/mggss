@@ -14,8 +14,8 @@ void MG_Method(Grid G, double *eps) {
   n = Grid_Get_n(G);
   u = Grid_Get_u(G);
 
-  u_save = (double *) malloc((n+2)*(n+2)*sizeof(double));
-  v_save = (double *) malloc((n+2)*(n+2)*sizeof(double));
+  u_save = (double *) calloc((n+2)*(n+2), sizeof(double));
+  v_save = (double *) calloc((n+2)*(n+2), sizeof(double));
 
   //----------------------------- finer grid -------------------------------//
   // pre-smoothing
@@ -41,11 +41,16 @@ void MG_Method(Grid G, double *eps) {
   // set u (now the error) to zero
   n = Grid_Get_n(G);
   u = Grid_Get_u(G);
-  memset(u, 0, (n+2)*(n+2)*sizeof(u[0]));
+  for (j = 0; j < n+2; j++) {
+    for (i = 0; i < n+2; i++) {
+      u[i+j*(n+2)] = 0.0;
+    }
+  }
   Grid_Set_u(G, u);
 
   // recalculate on coarser grid (TODO: here eventuelly not an iterative scheme?)
   Gauss_Seidel(G);
+
   //------------------------------------------------------------------------//
 
   //--------------------------- finer grid ---------------------------------//
@@ -115,8 +120,8 @@ void Restriction (Grid G) {
   u = Grid_Get_u(G);
   v = Grid_Get_v(G);
   n_c = n/2;
-  u_c = (double *) malloc((n_c+2)*(n_c+2)*sizeof(double));
-  v_c = (double *) malloc((n_c+2)*(n_c+2)*sizeof(double));
+  u_c = (double *) calloc((n_c+2)*(n_c+2), sizeof(double));
+  v_c = (double *) calloc((n_c+2)*(n_c+2), sizeof(double));
 
   // loop over even, even combination in order to define coarse grid
   for (j = 2; j < n+1; j = j+2) {
@@ -153,12 +158,12 @@ void Prolongation(Grid G) {
   u = Grid_Get_u(G);
   v = Grid_Get_v(G);
   n_f = n*2;
-  u_f = (double *) malloc((n_f+2)*(n_f+2)*sizeof(double));
-  v_f = (double *) malloc((n_f+2)*(n_f+2)*sizeof(double));
+  u_f = (double *) calloc((n_f+2)*(n_f+2), sizeof(double));
+  v_f = (double *) calloc((n_f+2)*(n_f+2), sizeof(double));
 
   // pad fine temporary array with zeros at non-defined places
-  for (j = 0; j < n_f+2; j++) {
-    for (i = 0; i < n_f+2; i++) {
+  for (j = 1; j < n_f+1; j++) {
+    for (i = 1; i < n_f+1; i++) {
       if ((j%2 == 0) && (i%2 == 0)) {
         v_f[i+j*(n_f+2)] = v[i/2+j/2*(n+2)];
         u_f[i+j*(n_f+2)] = u[i/2+j/2*(n+2)];
@@ -169,7 +174,15 @@ void Prolongation(Grid G) {
     }
   }
 
+  // set everything to zero to avoid side-effects
+  for (j = 0; j < n+2; j++) {
+    for (i = 0; i < n+2; i++) {
+      v[i+j*(n+2)] = 0.0;
+      u[i+j*(n+2)] = 0.0;
+    }
+  }
 
+  Grid_Set(G,u_f,v_f,n_f);
 
   // loop over all elements in finer array
   for (j = 1; j < n_f+1; j++) {
