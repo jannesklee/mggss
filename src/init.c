@@ -14,10 +14,10 @@ int main (void) {
   //--------------------------- declarations -------------------------------//
   Grid          G;                                // grid                   //
   double        *u, *v;                           // solution u and rhs v   //
-  unsigned int  n = 159;                          // res. has to be odd     //
-  double        eps0 = 1e-5;                      // error-limit            //
+  unsigned int  n = 199;                          // res. has to be odd     //
+  double        eps0 = 1e-10;                      // error-limit            //
   double        eps  = 0.0;                       // error                  //
-  unsigned int  k = 2;                            // 1: const. dens. circle //
+  unsigned int  k = 1;                            // 1: const. dens. circle //
                                                   // 2: exponential distr.  //
 
   //---------------------------- allocations -------------------------------//
@@ -36,8 +36,8 @@ int main (void) {
     MG_Method(G, &eps);
   } while(eps > eps0);
   Output(G);
-  //--------------------------- deallocations ------------------------------//
 
+  //--------------------------- deallocations ------------------------------//
   free(u);
   free(v);
   Grid_Destroy(&G);
@@ -66,7 +66,7 @@ void initialize(double *u, double *v, unsigned int n, unsigned int k) {
     for (i = 0; i < n+2; i++) {
       for (j = 0; j < n+2; j++) {
         r = sqrt((1./((n-1.)*(n-1.))*((i-n/2)*(i-n/2)+(j-n/2)*(j-n/2))));
-        v[i+j*(n+2)] = 100.0*exp(-100*r*r);
+        v[i+j*(n+2)] = exp(-1000*r*r);
       }
     }
   }
