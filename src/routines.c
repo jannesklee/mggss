@@ -31,7 +31,7 @@ void MG_Method(Grid G, double *eps) {
     }
   }
   // calculate residual r and write it in v
-  AddEval(1.0, G);
+  AddEval(-1.0, G);
   //------------------------------------------------------------------------//
 
   //--------------------------- coarser grid -------------------------------//
@@ -215,7 +215,7 @@ void AddEval(double alpha, Grid G) {
 
   for (j = 1; j < n+1; j++){
     for (i = 1; i < n+1; i++){
-      v[i+j*(n+2)] = v[i+j*(n+2)] - alpha*(4.*u[i+j*(n+2)] -
+      v[i+j*(n+2)] = v[i+j*(n+2)] + alpha*(4.*u[i+j*(n+2)] -
                        u[(i+1)+j*(n+2)] - u[(i-1)+j*(n+2)] -
                        u[i+(j+1)*(n+2)] - u[i+(j-1)*(n+2)]);
     }
