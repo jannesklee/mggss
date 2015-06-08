@@ -14,6 +14,7 @@ unsigned int  Grid_Get_n (Grid);
 void          Grid_Set (Grid, double *, double *, unsigned int);
 void          Grid_Set_u (Grid, double *);
 void          Grid_Set_v (Grid, double *);
+void          Grid_Set_n (Grid, unsigned int);
 //--------------------------------------------------------------------------//
 
 //-------------------------- memory allocation -----------------------------//

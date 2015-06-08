@@ -6,9 +6,9 @@
 void MG_Method(Grid, double *);
 void Gauss_Seidel(Grid);
 
-void Restriction(Grid);
+void Restriction(Grid, Grid);
 
-void Prolongation(Grid);
+void Prolongation(Grid, Grid);
 
 void AddEval(double, Grid);
 
