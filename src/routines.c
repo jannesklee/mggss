@@ -52,7 +52,7 @@ void MG_Method(Grid G, double *eps) {
   Gauss_Seidel(H);
   //------------------------------------------------------------------------//
 
-  // here a recursive call of Multigrid has to be made
+  //TODO: here a recursive call of Multigrid has to be made
 
   //--------------------------- finer grid ---------------------------------//
   // prolongate array from coarser grid H to finer grid G
@@ -73,14 +73,6 @@ void MG_Method(Grid G, double *eps) {
   Grid_Set_v(G, v);
   Grid_Set_u(G, u);
   Gauss_Seidel(G);
-
-//  // calculate error and set back to zero before doing so
-//  *eps = 0.0;
-//  for (j = 1; j < n+1; j++) {
-//    for (i = 1; i < n+1; i++) {
-//      (*eps) = fmax((*eps),fabs(u[i+j*(n+2)]-u_save[i+j*(n+2)]));
-//    }
-//  }
 
   free(u_save);
   free(v_save);
@@ -132,17 +124,9 @@ void Restriction (Grid G, Grid H) {               // finer and coarser grid //
     for (i = 2; i < n+1; i = i+2) {
       v_c[i/2+j/2*(n_c+2)] = 0.25*(v[i+j*(n+2)] + 0.5*(v[(i+1)+j*(n+2)] +
           v[(i-1)+j*(n+2)] + v[i+(j+1)*(n+2)] + v[i+(j-1)*(n+2)]) +
-          0.25*(v[(i+1)+(j+1)*(n+2)] + v[(i-1)+(j+1)*(n+2)] +
-          v[(i+1)+(j-1)*(n+2)] + v[(i-1)+(j-1)*(n+2)]));
+            0.5*(v[(i+1)+(j+1)*(n+2)] + v[(i-1)+(j-1)*(n+2)]));
     }
   }
-
-//  // copy values in first square of v array
-//  for (j = 1; j < n_c+1; j++) {
-//    for (i = 1; i < n_c+1; i++) {
-//      v[i+j*(n_c+2)] = v_c[i+j*(n_c+2)];
-//    }
-//  }
 
   // set u manually to zero
   for (j = 0; j < n_c+2; j++) {
@@ -157,8 +141,8 @@ void Restriction (Grid G, Grid H) {               // finer and coarser grid //
 
 //--------------------------- prolongation ---------------------------------//
 void Prolongation(Grid H, Grid G) {
-  double *v_f;                              // values at              //
-  double *u_c, *u_f, *u_tmp;                              // current & finer grid   //
+  double *v_f;                                    // values at              //
+  double *u_c, *u_f;                      // current & finer grid   //
   unsigned int n_c, n_f;                          // number of grid points  //
   unsigned int i, j;
 
@@ -169,47 +153,29 @@ void Prolongation(Grid H, Grid G) {
   u_f = Grid_Get_u(G);
   v_f = Grid_Get_v(G);
 
-  u_tmp = (double *) calloc((n_f+2)*(n_f+2), sizeof(double));
-
-  // pad fine temporary array with zeros at non-defined places
+  // loop over all elements in finer array
   for (j = 1; j < n_f+1; j++) {
     for (i = 1; i < n_f+1; i++) {
       if ((j%2 == 0) && (i%2 == 0)) {
         u_f[i+j*(n_f+2)] = u_c[i/2+j/2*(n_c+2)];
-      }else {
-        u_f[i+j*(n_f+2)] = 0.0;
       }
-    }
-  }
-
-//  // set everything to zero to avoid side-effects
-//  for (j = 0; j < n_c+2; j++) {
-//    for (i = 0; i < n_c+2; i++) {
-//      u_c[i+j*(n+2)] = 0.0;
-//    }
-//  }
-
-//  Grid_Set(G,u_f,v_f,n_f);
-
-  // loop over all elements in finer array
-  for (j = 1; j < n_f+1; j++) {
-    for (i = 1; i < n_f+1; i++) {
-      u_tmp[i+j*(n_f+2)] = u_f[i+j*(n_f+2)] + 0.5*(u_f[(i+1)+j*(n_f+2)]
-          + u_f[(i-1)+j*(n_f+2)] + u_f[i+(j+1)*(n_f+2)]
-          + u_f[i+(j-1)*(n_f+2)]) + 0.25*(u_f[(i+1)+(j+1)*(n_f+2)]
-          + u_f[(i+1)+(j-1)*(n_f+2)] + u_f[(i-1)+(j+1)*(n_f+2)]
-          + u_f[(i-1)+(j-1)*(n_f+2)]);
-    }
-  }
-  for (j = 1; j < n_f+1; j++) {
-    for (i = 1; i < n_f+1; i++) {
-      u_f[i+j*(n_f+2)] = u_tmp[i+j*(n_f+2)];
+      else if ((j%2 == 0) && (i%2 != 0)) {
+        u_f[i+j*(n_f+2)] = 0.5*(u_c[(i+1)/2+j/2*(n_c+2)] +
+                                u_c[(i-1)/2+j/2*(n_c+2)]);
+      }
+      else if ((j%2 != 0) && (i%2 == 0)) {
+        u_f[i+j*(n_f+2)] = 0.5*(u_c[i/2+(j+1)/2*(n_c+2)] +
+                                u_c[i/2+(j-1)/2*(n_c+2)]);
+      }
+      else if ((j%2 != 0) && (i%2 != 0)) {
+        u_f[i+j*(n_f+2)] = 0.5*(u_c[(i+1)/2+(j+1)/2*(n_c+2)] +
+                                u_c[(i-1)/2+(j-1)/2*(n_c+2)]);
+      }
     }
   }
 
   // write prolongated values in grid
   Grid_Set(G,u_f,v_f,n_f);
-  free(u_tmp);
 }
 
 //----------------------------- addeval ------------------------------------//
