@@ -42,6 +42,7 @@ void MG_Method(Grid G, double *eps) {
   // calculate residual r and write it in v
   AddEval(-1.0, G);
   //------------------------------------------------------------------------//
+  *eps = MaxNorm(Grid_Get_v(G),Grid_Get_n(G));
 
   //--------------------------- coarser grid -------------------------------//
   // restricts only v, because it is assumed to use the residue!
@@ -54,7 +55,7 @@ void MG_Method(Grid G, double *eps) {
   // here a recursive call of Multigrid has to be made
 
   //--------------------------- finer grid ---------------------------------//
-  // prolongate array with coarser grid H and finer grid G
+  // prolongate array from coarser grid H to finer grid G
   Prolongation(H, G);
 
   // finally calculate solution
@@ -73,13 +74,13 @@ void MG_Method(Grid G, double *eps) {
   Grid_Set_u(G, u);
   Gauss_Seidel(G);
 
-  // calculate error and set back to zero before doing so
-  *eps = 0.0;
-  for (j = 1; j < n+1; j++) {
-    for (i = 1; i < n+1; i++) {
-      (*eps) = fmax((*eps),fabs(u[i+j*(n+2)]-u_save[i+j*(n+2)]));
-    }
-  }
+//  // calculate error and set back to zero before doing so
+//  *eps = 0.0;
+//  for (j = 1; j < n+1; j++) {
+//    for (i = 1; i < n+1; i++) {
+//      (*eps) = fmax((*eps),fabs(u[i+j*(n+2)]-u_save[i+j*(n+2)]));
+//    }
+//  }
 
   free(u_save);
   free(v_save);
@@ -91,7 +92,7 @@ void MG_Method(Grid G, double *eps) {
 //---------------------------- gauss-seidel --------------------------------//
 void Gauss_Seidel (Grid G) {
   double *u, *v;                                  // solution, rhs          //
-  double h;                                       // stepwidth              //
+  double h, h2;                                   // stepwidth              //
   unsigned int n;                                 // number of grid points  //
   unsigned int i, j;
 
@@ -100,10 +101,11 @@ void Gauss_Seidel (Grid G) {
   h = Grid_Get_h(G);
   n = Grid_Get_n(G);
 
+  h2 = h*h;
   // main-part of gauss-seidel
   for (i = 1; i < n+1; i++) {
     for (j = 1; j < n+1; j++) {
-      u[i+j*(n+2)] = 0.25*(h*h*v[i+j*(n+2)] + u[(i+1)+j*(n+2)]
+      u[i+j*(n+2)] = 0.25*(h2*v[i+j*(n+2)] + u[(i+1)+j*(n+2)]
           + u[(i-1)+j*(n+2)] + u[i+(j+1)*(n+2)] + u[i+(j-1)*(n+2)]);
     }
   }
@@ -233,6 +235,21 @@ void AddEval(double alpha, Grid G) {
   }
 
   Grid_Set_v(G,v);
+}
+
+//----------------------------- maximum norm -------------------------------//
+double MaxNorm(double * u, unsigned int n){
+  double umax;
+  unsigned int i, j;
+
+  umax = 0.0;
+  for (j = 1; j < n+1; j++) {
+    for (i = 1; i < n+1; i++) {
+      umax = fmax(umax,fabs(u[i+j*(n+2)]));
+    }
+  }
+
+  return umax;
 }
 
 //-------------------------------- output ----------------------------------//

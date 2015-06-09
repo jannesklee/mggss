@@ -15,7 +15,7 @@ int main (void) {
   Grid          G;                                // grid                   //
   double        *u, *v;                           // solution u and rhs v   //
   unsigned int  n = 199;                          // res. has to be odd     //
-  double        eps0 = 1e-10;                      // error-limit            //
+  double        eps0 = 1e-10;                     // error-limit            //
   double        eps  = 0.0;                       // error                  //
   unsigned int  k = 1;                            // 1: const. dens. circle //
                                                   // 2: exponential distr.  //
@@ -34,6 +34,7 @@ int main (void) {
   //----------------------------- main loop --------------------------------//
   do {
     MG_Method(G, &eps);
+    printf("Error: %.2e \n", eps);                // print out error        //
   } while(eps > eps0);
   Output(G);
 

@@ -12,6 +12,8 @@ void Prolongation(Grid, Grid);
 
 void AddEval(double, Grid);
 
+double MaxNorm(double *, unsigned int);
+
 void Output(Grid);
 //--------------------------------------------------------------------------//
 #endif
