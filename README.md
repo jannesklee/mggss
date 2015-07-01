@@ -10,6 +10,10 @@ It uses Dirichlet boundary conditions.
 ###General Usage Notes
 Setup can be done in __init.c__ .
 
+###License
+This piece of software is licensed under the GPLv3. Read LICENSE for further
+details.
+
 ###Installation
 Compilation is done by typing:
 
