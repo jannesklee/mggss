@@ -1,3 +1,24 @@
+/*****************************************************************************
+*                                                                            *
+* MGGSS - Multigrid-Gauss-Seidel-Solver                                      *
+* Copyright (C) <2015>                                                       *
+* Jannes Klee <jklee@astrophysik.uni-kiel.de>                                *
+*                                                                            *
+* This program is free software: you can redistribute it and/or modify       *
+* it under the terms of the GNU General Public License as published by       *
+* the Free Software Foundation, either version 3 of the License, or          *
+* (at your option) any later version.                                        *
+*                                                                            *
+* This program is distributed in the hope that it will be useful,            *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+* GNU General Public License for more details.                               *
+*                                                                            *
+* You should have received a copy of the GNU General Public License          *
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.      *
+*                                                                            *
+*****************************************************************************/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,12 +27,13 @@
 #include "routines.h"
 
 //------------------------- multigrid-method -------------------------------//
-void MG_Method(Grid G, double *eps) {
+void MG_Method(Grid G, double *eps, unsigned int k, unsigned int gamma) {
   double *u, *v, *u_c, *v_c;
   double *u_save, *v_save;
   unsigned int n;
   unsigned int i, j;
   Grid H;
+
 
   n = Grid_Get_n(G);
   u = Grid_Get_u(G);
@@ -25,7 +47,6 @@ void MG_Method(Grid G, double *eps) {
   H = Grid_Create();
   Grid_Set(H,u_c,v_c,n/2);
 
-  //----------------------------- finer grid -------------------------------//
   // pre-smoothing
   Gauss_Seidel(G);
 
@@ -39,22 +60,18 @@ void MG_Method(Grid G, double *eps) {
     }
   }
 
-  // calculate residual r and write it in v
-  AddEval(-1.0, G);
-  //------------------------------------------------------------------------//
+  // restriction - writes the residue in v and sets u to zero
+  Restriction(G, H);
   *eps = MaxNorm(Grid_Get_v(G),Grid_Get_n(G));
 
-  //--------------------------- coarser grid -------------------------------//
-  // restricts only v, because it is assumed to use the residue!
-  Restriction(G, H);
-
-  // recalculate on coarser grid
+  // smooth coarser error
   Gauss_Seidel(H);
-  //------------------------------------------------------------------------//
 
-  //TODO: here a recursive call of Multigrid has to be made
+  // recursive call of the multigrid method
+  if (k < gamma) {
+    MG_Method(H, eps, k + 1, gamma);
+  }
 
-  //--------------------------- finer grid ---------------------------------//
   // prolongate array from coarser grid H to finer grid G
   Prolongation(H, G);
 
@@ -73,6 +90,7 @@ void MG_Method(Grid G, double *eps) {
   Grid_Set_v(G, v);
   Grid_Set_u(G, u);
   Gauss_Seidel(G);
+
 
   free(u_save);
   free(v_save);
@@ -118,6 +136,9 @@ void Restriction (Grid G, Grid H) {               // finer and coarser grid //
   u_c = Grid_Get_u(H);
   v_c = Grid_Get_v(H);
   n_c = Grid_Get_n(H);
+
+  // calculate residual r and write it in v
+  AddEval(-1.0, G);
 
   // loop over even, even combination in order to define coarse grid
   for (j = 2; j < n+1; j = j+2) {
